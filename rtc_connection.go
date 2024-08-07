@@ -170,11 +170,9 @@ func NewConnection(cfg *RtcConnectionConfig) *RtcConnection {
 		C.agora_local_user_register_video_frame_observer(ret.cLocalUser, ret.cVideoObserver)
 	}
 
-	agoraService.connectionRWMutex.Lock()
-	agoraService.consByCCon[ret.cConnection] = ret
-	agoraService.consByCLocalUser[ret.cLocalUser] = ret
-	agoraService.consByCVideoObserver[ret.cVideoObserver] = ret
-	agoraService.connectionRWMutex.Unlock()
+	agoraService.consByCCon.Store(ret.cConnection, ret)
+	agoraService.consByCLocalUser.Store(ret.cLocalUser, ret)
+	agoraService.consByCVideoObserver.Store(ret.cVideoObserver, ret)
 	return ret
 }
 
@@ -182,11 +180,9 @@ func (conn *RtcConnection) Release() {
 	if conn.cConnection == nil {
 		return
 	}
-	agoraService.connectionRWMutex.Lock()
-	delete(agoraService.consByCCon, conn.cConnection)
-	delete(agoraService.consByCLocalUser, conn.cLocalUser)
-	delete(agoraService.consByCVideoObserver, conn.cVideoObserver)
-	agoraService.connectionRWMutex.Unlock()
+	agoraService.consByCCon.Delete(conn.cConnection)
+	agoraService.consByCLocalUser.Delete(conn.cLocalUser)
+	agoraService.consByCVideoObserver.Delete(conn.cVideoObserver)
 	if conn.cAudioObserver != nil {
 		C.agora_local_user_unregister_audio_frame_observer(conn.cLocalUser)
 	}

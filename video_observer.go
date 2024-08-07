@@ -15,14 +15,18 @@ import (
 
 //export goOnVideoFrame
 func goOnVideoFrame(cObserver unsafe.Pointer, channelId *C.char, uid *C.char, frame *C.struct__video_frame) {
-	agoraService.connectionRWMutex.RLock()
-	con := agoraService.consByCVideoObserver[cObserver]
-	agoraService.connectionRWMutex.RUnlock()
-	if con == nil || con.videoObserver == nil || con.videoObserver.OnFrame == nil {
-		return
+
+	conVal, ok := agoraService.consByCVideoObserver.Load(cObserver)
+	if ok {
+		if con, ok := conVal.(*RtcConnection); ok {
+			if con == nil || con.videoObserver == nil || con.videoObserver.OnFrame == nil {
+				return
+			}
+			goChannelId := C.GoString(channelId)
+			goUid := C.GoString(uid)
+			goFrame := GoVideoFrame(frame)
+			con.videoObserver.OnFrame(con, goChannelId, goUid, goFrame)
+		}
 	}
-	goChannelId := C.GoString(channelId)
-	goUid := C.GoString(uid)
-	goFrame := GoVideoFrame(frame)
-	con.videoObserver.OnFrame(con, goChannelId, goUid, goFrame)
+
 }

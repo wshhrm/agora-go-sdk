@@ -15,14 +15,17 @@ import (
 
 //export goOnPlaybackAudioFrameBeforeMixing
 func goOnPlaybackAudioFrameBeforeMixing(cLocalUser unsafe.Pointer, channelId *C.char, uid *C.char, frame *C.struct__audio_frame) {
-	agoraService.connectionRWMutex.RLock()
-	con := agoraService.consByCLocalUser[cLocalUser]
-	agoraService.connectionRWMutex.RUnlock()
-	if con == nil || con.audioObserver == nil || con.audioObserver.OnPlaybackAudioFrameBeforeMixing == nil {
-		return
+
+	conVal, ok := agoraService.consByCLocalUser.Load(cLocalUser)
+	if ok {
+		if con, ok := conVal.(*RtcConnection); ok {
+			if con == nil || con.audioObserver == nil || con.audioObserver.OnPlaybackAudioFrameBeforeMixing == nil {
+				return
+			}
+			goChannelId := C.GoString(channelId)
+			goUid := C.GoString(uid)
+			goFrame := GoPcmAudioFrame(frame)
+			con.audioObserver.OnPlaybackAudioFrameBeforeMixing(con, goChannelId, goUid, goFrame)
+		}
 	}
-	goChannelId := C.GoString(channelId)
-	goUid := C.GoString(uid)
-	goFrame := GoPcmAudioFrame(frame)
-	con.audioObserver.OnPlaybackAudioFrameBeforeMixing(con, goChannelId, goUid, goFrame)
 }
