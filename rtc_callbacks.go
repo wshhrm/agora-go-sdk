@@ -9,7 +9,12 @@ package agoraservice
 #include "agora_media_base.h"
 */
 import "C"
-import "unsafe"
+import (
+	"fmt"
+	"log"
+	"time"
+	"unsafe"
+)
 
 //export goOnConnected
 func goOnConnected(cCon unsafe.Pointer, cConInfo *C.struct__rtc_conn_info, reason C.int) {
@@ -132,6 +137,7 @@ func goOnUserJoined(cCon unsafe.Pointer, uid *C.char) {
 	if ok {
 		if con, ok := conVal.(*RtcConnection); ok {
 			if con == nil || con.handler == nil || con.handler.OnUserJoined == nil {
+				log.Println(fmt.Printf("failed user joined channel con = %+v, time = %d\n", con, time.Now().Unix()))
 				return
 			}
 			// note： best practise is never reelase handler until app is exiting
