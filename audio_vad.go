@@ -78,7 +78,7 @@ func (vad *AudioVad) Release() {
 }
 
 func (vad *AudioVad) ProcessPcmFrame(frame *PcmAudioFrame) (*PcmAudioFrame, int) {
-	if frame.SampleRate != 16000 || frame.NumberOfChannels != 1 || frame.BytesPerSample != 2 {
+	if frame.SampleRate != 32000 || frame.NumberOfChannels != 1 || frame.BytesPerSample != 2 {
 		return nil, -1
 	}
 	cData := C.CBytes(frame.Data)
@@ -95,7 +95,7 @@ func (vad *AudioVad) ProcessPcmFrame(frame *PcmAudioFrame) (*PcmAudioFrame, int)
 		return nil, ret
 	}
 	samplesPerChannel := int(out.size) / 2 / 1
-	frameDuration := 1000 * samplesPerChannel / 16000
+	frameDuration := 1000 * samplesPerChannel / 32000
 	outData := C.GoBytes(out.audioData, out.size)
 	outFrame := &PcmAudioFrame{
 		Data:              outData,
@@ -103,7 +103,7 @@ func (vad *AudioVad) ProcessPcmFrame(frame *PcmAudioFrame) (*PcmAudioFrame, int)
 		SamplesPerChannel: samplesPerChannel,
 		BytesPerSample:    2,
 		NumberOfChannels:  1,
-		SampleRate:        16000,
+		SampleRate:        32000,
 	}
 	vad.lastOutTs += int64(frameDuration)
 
